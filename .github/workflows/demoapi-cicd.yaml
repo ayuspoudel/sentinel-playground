@@ -37,7 +37,7 @@ jobs:
 
     env:
       APP_NAME: demo-api
-      VALUES_FILE: playground/api-values/values-demoapi.yaml
+      VALUES_FILE: api-values/values-demoapi.yaml
 
     steps:
       - name: Checkout (release)
@@ -99,7 +99,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      VALUES_FILE: playground/api-values/values-demoapi.yaml
+      VALUES_FILE: api-values/values-demoapi.yaml
 
     steps:
       - name: Checkout (gitops)
