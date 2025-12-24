@@ -8,6 +8,7 @@ on:
     paths:
       - "helm/**"
       - "api-values/**"
+
   pull_request:
     paths:
       - "helm/**"
@@ -16,12 +17,13 @@ on:
 jobs:
   helm-test:
     runs-on: ubuntu-latest
-    steps:
 
+    steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.GITOPS_TOKEN }}
 
       - name: Set up Helm
         uses: azure/setup-helm@v4
@@ -35,8 +37,7 @@ jobs:
 
       - name: Install yq
         run: |
-          sudo wget -qO /usr/local/bin/yq \
-            https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
           sudo chmod +x /usr/local/bin/yq
 
       - name: Start KinD cluster
@@ -66,7 +67,6 @@ jobs:
           helm plugin remove diff || true
           helm plugin install https://github.com/databus23/helm-diff --version v3.9.5
 
-
       - name: Helm diff
         run: |
           helm diff upgrade demo-api helm/demo-api \
@@ -77,14 +77,9 @@ jobs:
         if: github.event_name == 'pull_request'
         run: |
           set -euo pipefail
-
           CHART_PATH="helm/demo-api"
           CHART_FILE="$CHART_PATH/Chart.yaml"
-
-          echo "Checking chart version gating (PR)..."
-
           CHANGED_FILES=$(git diff --name-only origin/main...HEAD)
-
           STRUCTURAL_CHANGE=false
           for file in $CHANGED_FILES; do
             if [[ "$file" == "$CHART_PATH/templates/"* ]] || \
@@ -93,37 +88,21 @@ jobs:
               STRUCTURAL_CHANGE=true
             fi
           done
-
           if [[ "$STRUCTURAL_CHANGE" == "true" ]]; then
             OLD_VERSION=$(git show origin/main:$CHART_FILE | yq '.version')
             NEW_VERSION=$(yq '.version' "$CHART_FILE")
-
-            echo "Old version: $OLD_VERSION"
-            echo "New version: $NEW_VERSION"
-
             if [[ "$OLD_VERSION" == "$NEW_VERSION" ]]; then
-              echo "ERROR: Chart structure changed but version was not bumped."
               exit 1
             fi
-          else
-            echo "No structural chart changes detected."
           fi
 
-      # --------------------------------------------------
-      # Auto-bump version on develop (push only)
-      # --------------------------------------------------
       - name: Auto-bump chart version on develop
         if: github.event_name == 'push' && github.ref_name == 'develop'
         run: |
           set -euo pipefail
-
           CHART_PATH="helm/demo-api"
           CHART_FILE="$CHART_PATH/Chart.yaml"
-
-          echo "Checking for structural chart changes on develop..."
-
           CHANGED_FILES=$(git diff --name-only HEAD~1..HEAD)
-
           STRUCTURAL_CHANGE=false
           for file in $CHANGED_FILES; do
             if [[ "$file" == "$CHART_PATH/templates/"* ]] || \
@@ -132,25 +111,15 @@ jobs:
               STRUCTURAL_CHANGE=true
             fi
           done
-
           if [[ "$STRUCTURAL_CHANGE" != "true" ]]; then
-            echo "No structural changes. No version bump required."
             exit 0
           fi
-
           CURRENT_VERSION=$(yq '.version' "$CHART_FILE")
           IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
-
-          NEW_PATCH=$((PATCH + 1))
-          NEW_VERSION="$MAJOR.$MINOR.$NEW_PATCH"
-
-          echo "Auto-bumping chart version: $CURRENT_VERSION → $NEW_VERSION"
-
+          NEW_VERSION="$MAJOR.$MINOR.$((PATCH + 1))"
           yq -i ".version = \"$NEW_VERSION\"" "$CHART_FILE"
-
           git config user.name "chart-bot"
           git config user.email "chart-bot@users.noreply.github.com"
-
           git add "$CHART_FILE"
           git commit -m "chore(chart): auto-bump version to $NEW_VERSION"
-          git push
+          git push origin HEAD:develop
