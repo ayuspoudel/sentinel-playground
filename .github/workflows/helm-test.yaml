@@ -121,5 +121,5 @@ jobs:
           git config user.name "chart-bot"
           git config user.email "chart-bot@users.noreply.github.com"
           git add "$CHART_FILE"
-          git commit -m "chore(chart): auto-bump version to $NEW_VERSION"
+          git commit -m "chore(chart): auto-bump version to $NEW_VERSION [skip ci]"
           git push origin HEAD:develop
