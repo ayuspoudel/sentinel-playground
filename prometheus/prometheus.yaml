@@ -1,7 +1,0 @@
-global:
-  scrape_interval: 5s
-
-scrape_configs:
-  - job_name: "workload"
-    static_configs:
-      - targets: ["workload:8080"]
