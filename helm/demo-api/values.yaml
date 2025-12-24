@@ -1,0 +1,27 @@
+# Default values.yaml file, used for testing
+replicaCount: 1
+
+image:
+  repository: demoapp
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  enabled: true
+  type: ClusterIP
+  port: 8080
+
+metricsService:
+  enabled: true
+  port: 8080
+
+env:
+  appName: demoapp
+  deploymentName: demoapp
+  clusterName: default
+  errorRate: "0.0"
+
+serviceMonitor:
+  enabled: false
+  path: /metrics
+  interval: 30s
