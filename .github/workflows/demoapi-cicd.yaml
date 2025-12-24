@@ -37,7 +37,7 @@ jobs:
 
     env:
       APP_NAME: demo-api
-      VALUES_FILE: playground/api-values/helm/values-demoapi.yaml
+      VALUES_FILE: playground/api-values/values-demoapi.yaml
 
     steps:
       - name: Checkout (release)
