@@ -1,5 +1,5 @@
 name: Workload CI/CD
-run-name: Ran by ${{ github.actor }}
+run-name: Workload CI/CD ${{ github.actor }}
 
 on:
   push:

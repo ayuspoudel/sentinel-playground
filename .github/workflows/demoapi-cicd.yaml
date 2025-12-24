@@ -1,5 +1,5 @@
 name: Demo API CI/CD
-run-name: Ran by ${{ github.actor }}
+run-name: Demo API CI/CD - ${{ github.actor }}
 
 on:
   push:
@@ -36,7 +36,7 @@ jobs:
 
     env:
       APP_NAME: demo-api
-      VALUES_FILE: playground/api-values/helm/values-demoapp.yaml
+      VALUES_FILE: playground/api-values/helm/values-demoapi.yaml
 
     steps:
       - name: Checkout (release)
