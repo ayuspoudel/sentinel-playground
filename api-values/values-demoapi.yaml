@@ -3,7 +3,7 @@ replicaCount: 2
 
 # Container image configuration
 image:
-  repository: demoapp
+  repository: docker/ayuspoudel/demoapp
   tag: latest
   pullPolicy: IfNotPresent
 
