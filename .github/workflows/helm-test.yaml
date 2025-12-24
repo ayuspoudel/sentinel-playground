@@ -61,10 +61,10 @@ jobs:
       - name: Kubernetes server-side validation
         run: kubectl apply --dry-run=server -f rendered.yaml
 
-    #   - name: Install helm-diff plugin
-    #     run: |
-    #       helm plugin remove diff || true
-    #       helm plugin install https://github.com/databus23/helm-diff --version v3.9.5
+      - name: Install helm-diff plugin
+        run: |
+          helm plugin remove diff || true
+          helm plugin install https://github.com/databus23/helm-diff --version v3.9.5
 
 
       - name: Helm diff
