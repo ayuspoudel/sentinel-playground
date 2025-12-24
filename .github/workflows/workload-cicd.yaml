@@ -51,7 +51,7 @@ jobs:
         app: ${{ fromJson(needs.detect.outputs.matrix) }}
 
     env:
-      VALUES_FILE: playground/helm/sentinel-workload/values.yaml
+      VALUES_FILE: api-values/values-demoapi.yaml
 
     steps:
       - name: Checkout (release)
@@ -117,7 +117,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      VALUES_FILE: playground/helm/sentinel-workload/values.yaml
+      VALUES_FILE: api-values/values-demoapi.yaml
 
     steps:
       - name: Checkout (gitops)
