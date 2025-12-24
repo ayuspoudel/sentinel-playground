@@ -16,7 +16,7 @@ var (
 		prometheus.CounterOpts{
 			Namespace: "demoapp",
 			Name:      "http_requests_total",
-			Help:      "Total number of HTTP requests",
+			Help:      "Total number of HTTP requests ",
 			Subsystem: "http",
 		}, []string{"method", "path", "status_class"},
 	)
