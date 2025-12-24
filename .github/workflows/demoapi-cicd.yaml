@@ -6,6 +6,7 @@ on:
     branches: [ develop ]
     paths:
       - "api/demo-api/**"
+      - "api-values/values-demoapi.yaml"
   workflow_dispatch:
 
 jobs:
@@ -98,7 +99,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      VALUES_FILE: playground/helm/demo-api/values.yaml
+      VALUES_FILE: playground/api-values/values-demoapi.yaml
 
     steps:
       - name: Checkout (gitops)
