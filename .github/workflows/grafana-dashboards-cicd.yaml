@@ -45,36 +45,20 @@ jobs:
 
       - name: Generate dashboard ConfigMaps
         run: |
-          OUT_DIR="argocd/apps/observability/dashboards"
-          SRC_DIR="grafana/dashboard"
-
-          mkdir -p "$OUT_DIR"
-
-          for file in "$SRC_DIR"/*.json; do
+            OUT_DIR="argocd/apps/observability/dashboards"
+            SRC_DIR="grafana/dashboard"
+            TEMPLATE="grafana/configMap/dashboard-configmap.tpl.yaml"
+            mkdir -p "$OUT_DIR"
+            for file in "$SRC_DIR"/*.json; do
             name="$(basename "$file" .json)"
-
-            cat <<'EOF' > "$OUT_DIR/${name}.yaml"
-            apiVersion: v1
-            kind: ConfigMap
-            metadata:
-            name: grafana-dashboard-__NAME__
-            namespace: monitoring
-            labels:
-                grafana_dashboard: "1"
-            data:
-            __NAME__.json: |
-            __JSON__
-            EOF
-
-            sed -i "s/__NAME__/${name}/g" "$OUT_DIR/${name}.yaml"
-            sed -i "/__JSON__/r $file" "$OUT_DIR/${name}.yaml"
-            sed -i "/__JSON__/d" "$OUT_DIR/${name}.yaml"
-
-            sed -i 's/^/    /' "$OUT_DIR/${name}.yaml"
-
+            out="$OUT_DIR/${name}.yaml"
+            cp "$TEMPLATE" "$out"
+            sed -i "s/__NAME__/${name}/g" "$out"
+            sed 's/^/    /' "$file" > /tmp/${name}.json.indented
+            sed -i "/__JSON__/r /tmp/${name}.json.indented" "$out"
+            sed -i "/__JSON__/d" "$out"
             echo "Generated grafana-dashboard-${name}"
-          done
-
+            done
 
       - name: Commit & push dashboards
         run: |
