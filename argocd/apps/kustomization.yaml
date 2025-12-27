@@ -6,5 +6,5 @@ resources:
   - ./applications/sentinel-load-generator.yaml
   - ./observability/prometheus-app.yaml
   - ./observability/grafana.yaml
-  - ./observability/dashboards/*
+  - ./observability/dashboards/
 

@@ -65,19 +65,34 @@ jobs:
 
       - name: Commit & push dashboards
         run: |
-            DASHBOARD_DIR="argocd/apps/observability/dashboards"
-            if [ ! -d "$DASHBOARD_DIR" ]; then
+          set -euo pipefail
+          DASHBOARD_DIR="argocd/apps/observability/dashboards"
+          KUSTOMIZATION_FILE="$DASHBOARD_DIR/kustomization.yaml"
+          if [ ! -d "$DASHBOARD_DIR" ]; then
             echo "Dashboard directory does not exist, skipping"
             exit 0
+          fi
+          if [ ! -f "$KUSTOMIZATION_FILE" ]; then
+            echo "kustomization.yaml missing — this should not happen"
+            exit 1
+          fi
+          for f in "$DASHBOARD_DIR"/*.yaml; do
+            fname="$(basename "$f")"
+            if [ "$fname" = "kustomization.yaml" ]; then
+              continue
             fi
-            git add "$DASHBOARD_DIR"
-            if git diff --cached --quiet; then
+            if ! grep -qE "^[[:space:]]*-[[:space:]]*$fname\$" "$KUSTOMIZATION_FILE"; then
+              echo "  - $fname" >> "$KUSTOMIZATION_FILE"
+              echo "Added $fname to kustomization.yaml"
+            fi
+          done
+          git add "$DASHBOARD_DIR"
+          if git diff --cached --quiet; then
             echo "No dashboard changes"
             exit 0
-            fi
-            git config user.name "sentinel-ci"
-            git config user.email "sentinel-ci@users.noreply.github.com"
-        
-            git commit -m "grafana: provision dashboards [skip ci]"
-            git push
-  
+          fi
+          git config user.name "sentinel-ci"
+          git config user.email "sentinel-ci@users.noreply.github.com"
+          git commit -m "grafana: provision dashboards [skip ci]"
+          git push
+
