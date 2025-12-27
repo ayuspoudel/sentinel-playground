@@ -14,7 +14,7 @@ import (
 var (
 	httpRequestsTotal = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Namespace: "demoapp",
+			Namespace: "demoapi",
 			Name:      "http_requests_total",
 			Help:      "Total number of HTTP requests ",
 			Subsystem: "http",
@@ -22,7 +22,7 @@ var (
 	)
 	httpRequestDuration = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Namespace: "realapp",
+			Namespace: "demoapi",
 			Subsystem: "http",
 			Name:      "request_duration_seconds",
 			Help:      "HTTP request latency",
@@ -32,7 +32,7 @@ var (
 	)
 	inflightRequests = prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Namespace: "realapp",
+			Namespace: "demoapi",
 			Subsystem: "http",
 			Name:      "inflight_requests",
 			Help:      "Current number of in-flight HTTP requests",
@@ -65,7 +65,7 @@ func main() {
 		}
 
 		w.WriteHeader(statusCode)
-		w.Write([]byte("hello from realapp  \n"))
+		w.Write([]byte("hello from demoapi  \n"))
 
 		statusClass := strconv.Itoa(statusCode/100) + "xx"
 
@@ -84,6 +84,6 @@ func main() {
 	http.Handle("/", handler)
 	http.Handle("/metrics", promhttp.Handler())
 
-	log.Println("realapp listening on :8080")
+	log.Println("demoapi listening on :8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
