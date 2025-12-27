@@ -23,6 +23,6 @@ env:
   errorRate: "0.1"
 # Prometheus ServiceMonitor configuration
 serviceMonitor:
-  enabled: false
+  enabled: true
   path: /metrics
   interval: 30s
