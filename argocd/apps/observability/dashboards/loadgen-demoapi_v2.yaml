@@ -1,0 +1,84 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-loadgen-demoapi_v2
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  loadgen-demoapi_v2.json: |
+    {
+      "uid": "loadgen-demoapi",
+      "title": "Load Generator <-> Demo API v2",
+      "schemaVersion": 38,
+      "version": 1,
+      "refresh": "5s",
+      "panels": [
+        {
+          "type": "timeseries",
+          "title": "Loadgen RPS ",
+          "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+          "targets": [
+            {
+              "expr": "rate(loadgen_requests_total[30s])",
+              "legendFormat": "rps"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Loadgen p95 Latency",
+          "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.95, rate(loadgen_request_duration_seconds_bucket[5m]))",
+              "legendFormat": "p95"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Demo API p95 Latency",
+          "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.95, rate(realapp_http_request_duration_seconds_bucket[5m]))",
+              "legendFormat": "p95"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "5xx Error Rate",
+          "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+          "targets": [
+            {
+              "expr": "rate(demoapp_http_requests_total{status_class=\"5xx\"}[1m])",
+              "legendFormat": "5xx"
+            }
+          ]
+        },
+        {
+          "type": "stat",
+          "title": "Target Reachable",
+          "gridPos": { "x": 0, "y": 16, "w": 6, "h": 6 },
+          "targets": [
+            {
+              "expr": "loadgen_target_up",
+              "legendFormat": "up"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Inflight Requests",
+          "gridPos": { "x": 6, "y": 16, "w": 18, "h": 6 },
+          "targets": [
+            {
+              "expr": "realapp_http_inflight_requests",
+              "legendFormat": "inflight"
+            }
+          ]
+        }
+      ]
+    }
