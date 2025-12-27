@@ -1,6 +1,6 @@
 {
   "uid": "loadgen-demoapi",
-  "title": "Load Generator vs Demo API v2",
+  "title": "Load Generator <-> Demo API v2",
   "schemaVersion": 38,
   "version": 1,
   "refresh": "5s",
