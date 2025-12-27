@@ -6,9 +6,9 @@ image:
   pullPolicy: IfNotPresent
 
 env:
-  TARGET_URL: "http://demo-api:8080"
-  CONCURRENCY: "30"
-  SLEEP_MS: "20"
+  targetUrl: "http://demo-api:8080"
+  concurrency: "30"
+  sleepMs: "20"
 
 resources:
   requests:
