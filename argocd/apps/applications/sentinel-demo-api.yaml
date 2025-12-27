@@ -8,10 +8,10 @@ spec:
   source:
     repoURL: https://github.com/ayuspoudel/sentinel-playground
     targetRevision: develop
-    path: api-values/
+    path: helm/demo-api
     helm:
       valueFiles: 
-        - values-demoapi.yaml
+        - api-values/values-demoapi.yaml
   destination:
     server: https://kubernetes.default.svc
     namespace: applications
