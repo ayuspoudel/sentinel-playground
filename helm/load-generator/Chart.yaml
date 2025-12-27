@@ -1,0 +1,17 @@
+apiVersion: v2
+name: load-generator
+description: Synthetic load generator for demo-api
+
+type: application
+
+version: 0.1.0
+appVersion: "0.1"
+
+keywords:
+  - load
+  - testing
+  - synthetic
+  - demo-api
+
+maintainers:
+  - name: Ayush Poudel
