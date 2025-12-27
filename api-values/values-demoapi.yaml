@@ -2,7 +2,7 @@
 replicaCount: 2
 # Container image configuration
 image:
-  repository: docker/ayuspoudel/demoapp
+  repository: ayuspoudel/demo-api
   tag: 1.0.1
   pullPolicy: IfNotPresent
 # API Service (external access via minikube)
@@ -23,6 +23,6 @@ env:
   errorRate: "0.1"
 # Prometheus ServiceMonitor configuration
 serviceMonitor:
-  enabled: true
+  enabled: false
   path: /metrics
   interval: 30s
