@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: https://github.com/ayuspoudel/sentinel-playground
     targetRevision: develop
-    path: playground/argocd/apps
+    path: argocd/apps
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
