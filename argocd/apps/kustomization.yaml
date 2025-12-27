@@ -7,4 +7,5 @@ resources:
   - ./observability/prometheus-app.yaml
   - ./observability/grafana.yaml
   - ./observability/dashboards/
+  - ./observability/dashboards.yaml
 
