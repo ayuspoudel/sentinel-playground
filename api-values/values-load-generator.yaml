@@ -1,7 +1,7 @@
 replicaCount: 1
 image:
   repository: ayuspoudel/load-generator
-  tag: "1.0.1"
+  tag: "1.0.2"
   pullPolicy: IfNotPresent
 env:
   targetUrl: "http://demo-api:8080"
