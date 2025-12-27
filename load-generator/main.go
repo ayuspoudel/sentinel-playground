@@ -73,7 +73,7 @@ func main() {
 
 /*
 @ayuspoudel
-Each worker thread will need to send one HTTP GET  request. It needs to then
+Each worker thread will need to send one HTTP GET request. It needs to then
 wait for response or error. It needs to drain and close the response body,
 and also atomically increment the shared counter. It needs to sleep for a
 fixed amount of time and repeat forever.
