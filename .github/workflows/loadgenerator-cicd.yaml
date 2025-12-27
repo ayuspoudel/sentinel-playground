@@ -126,11 +126,12 @@ jobs:
             echo "No GitOps changes detected"
             exit 0
             fi
-
             git config user.name "sentinel-ci"
             git config user.email "sentinel-ci@users.noreply.github.com"
-
             git add "$VALUES_FILE"
             git commit -m "gitops: update load generator image [skip ci]"
-            git push
+            git fetch origin develop
+            git rebase origin/develop
+            git push --force-with-lease origin develop
+  
 
