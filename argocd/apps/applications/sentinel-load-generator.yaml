@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: sentinel-demo-api
+  name: sentinel-load-generator
   namespace: argocd
 spec:
   project: default
