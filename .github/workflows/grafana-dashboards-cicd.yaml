@@ -1,0 +1,82 @@
+name: Grafana Dashboards GitOps
+
+on:
+  push:
+    paths:
+      - grafana/dashboard/*.json
+  workflow_dispatch:
+
+jobs:
+  dashboards:
+    runs-on: ubuntu-latest
+
+    services:
+      grafana:
+        image: grafana/grafana:latest
+        ports:
+          - 3000:3000
+        options: >-
+          --health-cmd="wget -qO- http://localhost:3000/api/health || exit 1"
+          --health-interval=5s
+          --health-retries=20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate JSON syntax
+        run: |
+          for f in grafana/dashboard/*.json; do
+            echo "Validating JSON syntax: $f"
+            jq empty "$f"
+          done
+
+      - name: Validate Grafana dashboard structure
+        run: |
+          for f in grafana/dashboard/*.json; do
+            echo "Validating Grafana structure: $f"
+
+            jq -e '
+              .title and
+              .panels and
+              (.schemaVersion | numbers)
+            ' "$f" > /dev/null
+          done
+
+      - name: Generate dashboard ConfigMaps
+        run: |
+          OUT_DIR="argocd/apps/observability/dashboards"
+          SRC_DIR="grafana/dashboard"
+
+          mkdir -p "$OUT_DIR"
+
+          for file in "$SRC_DIR"/*.json; do
+            name="$(basename "$file" .json)"
+
+            cat <<EOF > "$OUT_DIR/${name}.yaml"
+            apiVersion: v1
+            kind: ConfigMap
+            metadata:
+            name: grafana-dashboard-${name}
+            namespace: monitoring
+            labels:
+                grafana_dashboard: "1"
+            data:
+            ${name}.json: |
+            $(sed 's/^/    /' "$file")
+            EOF
+
+            echo "Generated grafana-dashboard-${name}"
+          done
+
+      - name: Commit & push dashboards
+        run: |
+          if git diff --quiet; then
+            echo "No dashboard changes"
+            exit 0
+          fi
+          git config user.name "sentinel-ci"
+          git config user.email "sentinel-ci@users.noreply.github.com"
+          git add argocd/apps/observability/dashboards
+          git commit -m "grafana: provision dashboards [skip ci]"
+          git push
