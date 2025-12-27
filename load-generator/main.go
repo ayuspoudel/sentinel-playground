@@ -9,9 +9,55 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 var sentRequests uint64
+
+var (
+	loadgenRequestsTotal = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Namespace: "loadgen",
+			Name:      "requests_total",
+			Help:      "Total number of requests attempted by load generator",
+		},
+	)
+
+	loadgenErrorsTotal = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Namespace: "loadgen",
+			Name:      "errors_total",
+			Help:      "Total number of client-side errors",
+		},
+	)
+
+	loadgenInflight = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Namespace: "loadgen",
+			Name:      "inflight_requests",
+			Help:      "Current number of in-flight requests",
+		},
+	)
+
+	loadgenRequestDuration = prometheus.NewHistogram(
+		prometheus.HistogramOpts{
+			Namespace: "loadgen",
+			Name:      "request_duration_seconds",
+			Help:      "End-to-end request latency from load generator",
+			Buckets:   []float64{0.05, 0.1, 0.2, 0.3, 0.5, 0.75, 1, 1.5, 2, 3},
+		},
+	)
+
+	loadgenTargetUp = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Namespace: "loadgen",
+			Name:      "target_up",
+			Help:      "Whether the target endpoint is reachable",
+		},
+	)
+)
 
 func main() {
 	targetURL := mustGetEnv("TARGET_URL")
@@ -53,6 +99,22 @@ func main() {
 		Timeout:   2 * time.Second,
 	}
 
+	// register metrics
+	prometheus.MustRegister(
+		loadgenRequestsTotal,
+		loadgenErrorsTotal,
+		loadgenInflight,
+		loadgenRequestDuration,
+		loadgenTargetUp,
+	)
+
+	// metrics endpoint
+	go func() {
+		http.Handle("/metrics", promhttp.Handler())
+		log.Println("loadgen metrics listening on :9090")
+		log.Fatal(http.ListenAndServe(":9090", nil))
+	}()
+
 	log.Println("load generator started")
 	log.Println("target:", targetURL)
 	log.Println("concurrency:", concurrency)
@@ -82,15 +144,28 @@ func worker(id int, client *http.Client, target string, sleepMs int, wg *sync.Wa
 	defer wg.Done()
 
 	for {
+		start := time.Now()
+		loadgenInflight.Inc()
+
 		resp, err := client.Get(target)
 		if err != nil {
+			loadgenErrorsTotal.Inc()
+			loadgenTargetUp.Set(0)
+			loadgenInflight.Dec()
+
 			log.Printf("worker %d error: %v", id, err)
 			time.Sleep(200 * time.Millisecond)
 			continue
 		}
 
+		loadgenTargetUp.Set(1)
+
 		io.Copy(io.Discard, resp.Body)
 		resp.Body.Close()
+
+		loadgenRequestsTotal.Inc()
+		loadgenRequestDuration.Observe(time.Since(start).Seconds())
+		loadgenInflight.Dec()
 
 		atomic.AddUint64(&sentRequests, 1)
 		/*
