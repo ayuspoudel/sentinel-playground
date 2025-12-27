@@ -53,21 +53,28 @@ jobs:
           for file in "$SRC_DIR"/*.json; do
             name="$(basename "$file" .json)"
 
-            cat <<EOF > "$OUT_DIR/${name}.yaml"
+            cat <<'EOF' > "$OUT_DIR/${name}.yaml"
             apiVersion: v1
             kind: ConfigMap
             metadata:
-            name: grafana-dashboard-${name}
+            name: grafana-dashboard-__NAME__
             namespace: monitoring
             labels:
                 grafana_dashboard: "1"
             data:
-            ${name}.json: |
-            $(sed 's/^/    /' "$file")
+            __NAME__.json: |
+            __JSON__
             EOF
+
+            sed -i "s/__NAME__/${name}/g" "$OUT_DIR/${name}.yaml"
+            sed -i "/__JSON__/r $file" "$OUT_DIR/${name}.yaml"
+            sed -i "/__JSON__/d" "$OUT_DIR/${name}.yaml"
+
+            sed -i 's/^/    /' "$OUT_DIR/${name}.yaml"
 
             echo "Generated grafana-dashboard-${name}"
           done
+
 
       - name: Commit & push dashboards
         run: |
