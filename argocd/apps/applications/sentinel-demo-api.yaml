@@ -11,7 +11,7 @@ spec:
     path: helm/demo-api
     helm:
       valueFiles: 
-        - api-values/values-demoapi.yaml
+        - ../../api-values/values-demoapi.yaml
   destination:
     server: https://kubernetes.default.svc
     namespace: applications
