@@ -1,12 +1,15 @@
 replicaCount: 1
+
 image:
   repository: ayuspoudel/load-generator
   tag: "1.0.2"
   pullPolicy: IfNotPresent
+
 env:
-  targetUrl: "http://demo-api:8080"
-  concurrency: "30"
-  sleepMs: "20"
+  TARGET_URL: "http://demo-api:8080"
+  CONCURRENCY: "30"
+  SLEEP_MS: "20"
+
 resources:
   requests:
     cpu: 100m
@@ -14,3 +17,6 @@ resources:
   limits:
     cpu: 300m
     memory: 128Mi
+
+serviceMonitor:
+  enabled: true
