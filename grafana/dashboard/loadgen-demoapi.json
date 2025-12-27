@@ -7,7 +7,7 @@
   "panels": [
     {
       "type": "timeseries",
-      "title": "Loadgen RPS",
+      "title": "Loadgen RPS ",
       "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
       "targets": [
         {
