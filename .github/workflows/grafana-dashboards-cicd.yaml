@@ -62,12 +62,19 @@ jobs:
 
       - name: Commit & push dashboards
         run: |
-          if git diff --quiet; then
+            DASHBOARD_DIR="argocd/apps/observability/dashboards"
+            if [ ! -d "$DASHBOARD_DIR" ]; then
+            echo "Dashboard directory does not exist, skipping"
+            exit 0
+            fi
+            git add "$DASHBOARD_DIR"
+            if git diff --cached --quiet; then
             echo "No dashboard changes"
             exit 0
-          fi
-          git config user.name "sentinel-ci"
-          git config user.email "sentinel-ci@users.noreply.github.com"
-          git add argocd/apps/observability/dashboards
-          git commit -m "grafana: provision dashboards [skip ci]"
-          git push
+            fi
+            git config user.name "sentinel-ci"
+            git config user.email "sentinel-ci@users.noreply.github.com"
+        
+            git commit -m "grafana: provision dashboards [skip ci]"
+            git push
+  
