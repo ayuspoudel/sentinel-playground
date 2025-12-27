@@ -3,3 +3,4 @@ kind: Kustomization
 
 resources:
   - loadgen-demoapi_v2.yaml
+  - loadgen-demoapi.yaml
