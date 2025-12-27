@@ -3,6 +3,6 @@ kind: Kustomization
 
 resources:
   - ./applications/sentinel-demo-api.yaml
-  - ./prometheus/prometheus-app.yaml
   - ./applications/sentinel-load-generator.yaml
+  - ./prometheus/prometheus-app.yaml
 
