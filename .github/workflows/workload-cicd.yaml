@@ -10,6 +10,10 @@ on:
       - "playground/workload-flaky/**"
   workflow_dispatch:
 
+permissions:
+  contents: write
+
+
 jobs:
   detect:
     runs-on: ubuntu-latest
