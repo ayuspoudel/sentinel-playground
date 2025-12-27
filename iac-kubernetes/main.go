@@ -10,7 +10,6 @@ import (
 	"os/signal"
 	"path/filepath"
 	"runtime"
-	"strconv"
 	"strings"
 	"sync"
 	"syscall"
@@ -290,10 +289,10 @@ func main() {
 	go portForwardArgoCD(ctx, "sreCluster")
 	go startNgrok(ctx, "8088", "argocd")
 	waitForArgoCDApps(ctx, "sreCluster")
-	port := 9091
-	for _, c := range activeClusters {
-		go portForwardPrometheus(ctx, c, strconv.Itoa(port))
-		port++
-	}
+	// port := 9091
+	// for _, c := range activeClusters {
+	// 	go portForwardPrometheus(ctx, c, strconv.Itoa(port))
+	// 	port++
+	// }
 	<-ctx.Done()
 }
