@@ -5,7 +5,7 @@ on:
   push:
     branches: [ develop ]
     paths:
-      - "load-generator"
+      - "load-generator/*"
       - "api-values/values-load-generator.yaml"
   workflow_dispatch:
 
