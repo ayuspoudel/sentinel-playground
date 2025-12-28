@@ -93,37 +93,34 @@ jobs:
               rm -f "$cm"
             fi
           done
-
+  
       - name: Update kustomization.yaml
         run: |
-          set -euo pipefail
-
-          DASHBOARD_DIR="argocd/apps/observability/dashboards"
-          KUSTOMIZATION_FILE="$DASHBOARD_DIR/kustomization.yaml"
-
-          if [ ! -f "$KUSTOMIZATION_FILE" ]; then
+            set -euo pipefail
+    
+            DASHBOARD_DIR="argocd/apps/observability/dashboards"
+            KUSTOMIZATION_FILE="$DASHBOARD_DIR/kustomization.yaml"
+    
+            if [ ! -f "$KUSTOMIZATION_FILE" ]; then
             exit 1
-          fi
-
-          awk '
-            BEGIN { in_resources = 0 }
-            /^resources:/ { print; in_resources = 1; next }
-            in_resources && /^[^[:space:]]/ { in_resources = 0 }
-            !in_resources { print }
-          ' "$KUSTOMIZATION_FILE" > /tmp/kustomization.base.yaml
-
-          {
-            cat /tmp/kustomization.base.yaml
+            fi
+    
+            awk '
+            BEGIN { skip = 0 }
+            /^resources:/ { skip = 1; next }
+            skip && /^[^[:space:]]/ { skip = 0 }
+            !skip { print }
+            ' "$KUSTOMIZATION_FILE" > /tmp/kustomization.clean.yaml
+    
+            {
+            cat /tmp/kustomization.clean.yaml
             echo "resources:"
             for f in $(ls "$DASHBOARD_DIR"/grafana-dashboard-*.yaml 2>/dev/null | sort); do
-              echo "  - $(basename "$f")"
+                echo "  - $(basename "$f")"
             done
-          } > "$KUSTOMIZATION_FILE"
-
-          if ! grep -q grafana-dashboard- "$KUSTOMIZATION_FILE"; then
-            exit 1
-          fi
-
+            } > "$KUSTOMIZATION_FILE"
+  
+  
       - name: Commit & push dashboards
         run: |
           set -euo pipefail
