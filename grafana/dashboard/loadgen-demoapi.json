@@ -644,6 +644,6 @@
   "timezone": "",
   "title": "Sentinel-SRE Loadgen ↔ Demo API (SLO)",
   "uid": "sentinel-sre-slo",
-  "version": 6,
+  "version": 7,
   "weekStart": ""
 }
