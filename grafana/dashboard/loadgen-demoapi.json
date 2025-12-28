@@ -1,28 +1,52 @@
 {
   "uid": "loadgen-demoapi",
-  "title": "Load Generator  <-> Demo API ",
+  "title": "Load Generator ↔ Demo API",
   "schemaVersion": 38,
-  "version": 1,
+  "version": 2,
   "refresh": "5s",
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
   "panels": [
     {
       "type": "timeseries",
-      "title": "Loadgen RPS ",
-      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+      "title": "Loadgen RPS",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 7 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "decimals": 1
+        }
+      },
       "targets": [
         {
-          "expr": "rate(loadgen_requests_total[30s])",
-          "legendFormat": "rps"
+          "expr": "sum(rate(loadgen_requests_total[1m]))",
+          "legendFormat": "RPS"
         }
       ]
     },
     {
       "type": "timeseries",
       "title": "Loadgen p95 Latency",
-      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 7 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 3,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.3 },
+              { "color": "red", "value": 0.6 }
+            ]
+          }
+        }
+      },
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, rate(loadgen_request_duration_seconds_bucket[5m]))",
+          "expr": "histogram_quantile(0.95, sum(rate(loadgen_request_duration_seconds_bucket[5m])) by (le))",
           "legendFormat": "p95"
         }
       ]
@@ -30,10 +54,24 @@
     {
       "type": "timeseries",
       "title": "Demo API p95 Latency",
-      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+      "gridPos": { "x": 0, "y": 7, "w": 12, "h": 7 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 3,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.5 },
+              { "color": "red", "value": 1 }
+            ]
+          }
+        }
+      },
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, rate(realapp_http_request_duration_seconds_bucket[5m]))",
+          "expr": "histogram_quantile(0.95, sum(rate(realapp_http_request_duration_seconds_bucket[5m])) by (le))",
           "legendFormat": "p95"
         }
       ]
@@ -41,10 +79,23 @@
     {
       "type": "timeseries",
       "title": "5xx Error Rate",
-      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+      "gridPos": { "x": 12, "y": 7, "w": 12, "h": 7 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "decimals": 3,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 0.01 }
+            ]
+          }
+        }
+      },
       "targets": [
         {
-          "expr": "rate(demoapp_http_requests_total{status_class=\"5xx\"}[1m])",
+          "expr": "sum(rate(demoapp_http_requests_total{status_class=\"5xx\"}[1m]))",
           "legendFormat": "5xx"
         }
       ]
@@ -52,21 +103,47 @@
     {
       "type": "stat",
       "title": "Target Reachable",
-      "gridPos": { "x": 0, "y": 16, "w": 6, "h": 6 },
+      "gridPos": { "x": 0, "y": 14, "w": 6, "h": 6 },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": { "text": "DOWN", "color": "red" },
+                "1": { "text": "UP", "color": "green" }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "green", "value": 1 }
+            ]
+          }
+        }
+      },
       "targets": [
         {
-          "expr": "loadgen_target_up",
-          "legendFormat": "up"
+          "expr": "max(loadgen_target_up)",
+          "legendFormat": "reachable"
         }
       ]
     },
     {
       "type": "timeseries",
       "title": "Inflight Requests",
-      "gridPos": { "x": 6, "y": 16, "w": 18, "h": 6 },
+      "gridPos": { "x": 6, "y": 14, "w": 18, "h": 6 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0
+        }
+      },
       "targets": [
         {
-          "expr": "realapp_http_inflight_requests",
+          "expr": "sum(realapp_http_inflight_requests)",
           "legendFormat": "inflight"
         }
       ]
