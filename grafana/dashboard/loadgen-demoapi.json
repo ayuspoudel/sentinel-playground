@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 2,
+  "id": 4,
   "links": [],
   "panels": [
     {
@@ -271,6 +271,10 @@
       "type": "stat"
     },
     {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -351,8 +355,14 @@
       },
       "targets": [
         {
-          "expr": "((sum(rate(demoapi_requests_total{status_class=\"5xx\"}[5m])) OR vector(0)) / sum(rate(demoapi_requests_total[5m])))",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "((sum(rate(demoapi_http_requests_total{status_class=\"5xx\"}[5m])) OR vector(0)) / sum(rate(demoapi_http_requests_total[5m])))",
           "legendFormat": "error ratio",
+          "range": true,
           "refId": "A"
         }
       ],
@@ -360,6 +370,10 @@
       "type": "timeseries"
     },
     {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -439,8 +453,14 @@
       },
       "targets": [
         {
-          "expr": "(((sum(rate(demoapi_requests_total{status_class=\"5xx\"}[5m])) OR vector(0)) / sum(rate(demoapi_requests_total[5m]))) / 0.001)",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "(((sum(rate(demoapi_http_requests_total{status_class=\"5xx\"}[5m])) OR vector(0)) / sum(rate(demoapi_http_requests_total[5m]))) / 0.001)",
           "legendFormat": "burn rate (5m)",
+          "range": true,
           "refId": "A"
         }
       ],
@@ -448,6 +468,10 @@
       "type": "timeseries"
     },
     {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -527,8 +551,14 @@
       },
       "targets": [
         {
-          "expr": "(((sum(rate(demoapi_requests_total{status_class=\"5xx\"}[1h])) OR vector(0)) / sum(rate(demoapi_requests_total[1h]))) / 0.001)",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "(((sum(rate(demoapi_http_requests_total{status_class=\"5xx\"}[1h])) OR vector(0)) / sum(rate(demoapi_http_requests_total[1h]))) / 0.001)",
           "legendFormat": "burn rate (1h)",
+          "range": true,
           "refId": "A"
         }
       ],
@@ -644,6 +674,6 @@
   "timezone": "",
   "title": "Sentinel-SRE Loadgen ↔ Demo API (SLO)",
   "uid": "sentinel-sre-slo",
-  "version": 7,
+  "version": 1,
   "weekStart": ""
 }
