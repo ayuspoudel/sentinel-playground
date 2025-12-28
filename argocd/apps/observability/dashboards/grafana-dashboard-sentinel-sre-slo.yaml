@@ -11,7 +11,7 @@ data:
       "uid": "sentinel-sre-slo",
       "title": "Sentinel-SRE Loadgen ↔ Demo API (SLO)",
       "schemaVersion": 38,
-      "version": 1,
+      "version": 2,
       "refresh": "10s",
       "time": {
         "from": "now-30m",
@@ -41,6 +41,7 @@ data:
           ],
           "fieldConfig": {
             "defaults": {
+              "unit": "s",
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
@@ -48,8 +49,7 @@ data:
                   { "color": "yellow", "value": 0.5 },
                   { "color": "red", "value": 1 }
                 ]
-              },
-              "unit": "s"
+              }
             }
           }
         },
@@ -59,7 +59,7 @@ data:
           "gridPos": { "x": 0, "y": 7, "w": 12, "h": 7 },
           "targets": [
             {
-              "expr": "sum(rate(demoapi_http_requests_total{status_class=\"5xx\"}[5m])) / sum(rate(demoapi_http_requests_total[5m]))",
+              "expr": "((sum(rate(demoapi_http_requests_total{status_class=\"5xx\"}[5m])) OR vector(0)) / sum(rate(demoapi_http_requests_total[5m])))",
               "legendFormat": "error ratio"
             }
           ],
@@ -83,7 +83,7 @@ data:
           "gridPos": { "x": 12, "y": 7, "w": 12, "h": 7 },
           "targets": [
             {
-              "expr": "(sum(rate(demoapi_http_requests_total{status_class=\"5xx\"}[5m])) / sum(rate(demoapi_http_requests_total[5m]))) / 0.001",
+              "expr": "(((sum(rate(demoapi_http_requests_total{status_class=\"5xx\"}[5m])) OR vector(0)) / sum(rate(demoapi_http_requests_total[5m]))) / 0.001)",
               "legendFormat": "burn rate (5m)"
             }
           ],
@@ -106,7 +106,7 @@ data:
           "gridPos": { "x": 0, "y": 14, "w": 12, "h": 7 },
           "targets": [
             {
-              "expr": "(sum(rate(demoapi_http_requests_total{status_class=\"5xx\"}[1h])) / sum(rate(demoapi_http_requests_total[1h]))) / 0.001",
+              "expr": "(((sum(rate(demoapi_http_requests_total{status_class=\"5xx\"}[1h])) OR vector(0)) / sum(rate(demoapi_http_requests_total[1h]))) / 0.001)",
               "legendFormat": "burn rate (1h)"
             }
           ],
@@ -147,7 +147,13 @@ data:
           "fieldConfig": {
             "defaults": {
               "mappings": [
-                { "type": "value", "options": { "0": { "text": "DOWN" }, "1": { "text": "UP" } } }
+                {
+                  "type": "value",
+                  "options": {
+                    "0": { "text": "DOWN" },
+                    "1": { "text": "UP" }
+                  }
+                }
               ],
               "thresholds": {
                 "mode": "absolute",
