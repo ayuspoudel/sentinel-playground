@@ -1,6 +1,6 @@
 {
   "uid": "sentinel-sre-slo",
-  "title": "Sentinel-SRE — Loadgen ↔ Demo API (SLO)",
+  "title": "Sentinel-SRE Loadgen ↔ Demo API (SLO)",
   "schemaVersion": 38,
   "version": 1,
   "refresh": "10s",
