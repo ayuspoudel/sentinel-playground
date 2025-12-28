@@ -17,13 +17,11 @@ var (
 			Namespace: "demoapi",
 			Name:      "http_requests_total",
 			Help:      "Total number of HTTP requests ",
-			Subsystem: "http",
 		}, []string{"method", "path", "status_class"},
 	)
 	httpRequestDuration = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Namespace: "demoapi",
-			Subsystem: "http",
 			Name:      "request_duration_seconds",
 			Help:      "HTTP request latency",
 			Buckets:   []float64{0.05, 0.1, 0.2, 0.3, 0.5, 0.75, 1, 1.5, 2, 3},
@@ -33,7 +31,6 @@ var (
 	inflightRequests = prometheus.NewGauge(
 		prometheus.GaugeOpts{
 			Namespace: "demoapi",
-			Subsystem: "http",
 			Name:      "inflight_requests",
 			Help:      "Current number of in-flight HTTP requests",
 		},
