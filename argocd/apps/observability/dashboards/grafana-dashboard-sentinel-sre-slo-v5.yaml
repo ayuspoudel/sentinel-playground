@@ -360,7 +360,7 @@ data:
           },
           "targets": [
             {
-              "expr": "((sum(rate(demoapi_http_requests_total{status_class=\"5xx\"}[5m])) OR vector(0)) / sum(rate(demoapi_http_requests_total[5m])))",
+              "expr": "((sum(rate(demoapi_requests_total{status_class=\"5xx\"}[5m])) OR vector(0)) / sum(rate(demoapi_requests_total[5m])))",
               "legendFormat": "error ratio",
               "refId": "A"
             }
@@ -448,7 +448,7 @@ data:
           },
           "targets": [
             {
-              "expr": "(((sum(rate(demoapi_http_requests_total{status_class=\"5xx\"}[5m])) OR vector(0)) / sum(rate(demoapi_http_requests_total[5m]))) / 0.001)",
+              "expr": "(((sum(rate(demoapi_requests_total{status_class=\"5xx\"}[5m])) OR vector(0)) / sum(rate(demoapi_requests_total[5m]))) / 0.001)",
               "legendFormat": "burn rate (5m)",
               "refId": "A"
             }
@@ -536,7 +536,7 @@ data:
           },
           "targets": [
             {
-              "expr": "(((sum(rate(demoapi_http_requests_total{status_class=\"5xx\"}[1h])) OR vector(0)) / sum(rate(demoapi_http_requests_total[1h]))) / 0.001)",
+              "expr": "(((sum(rate(demoapi_requests_total{status_class=\"5xx\"}[1h])) OR vector(0)) / sum(rate(demoapi_requests_total[1h]))) / 0.001)",
               "legendFormat": "burn rate (1h)",
               "refId": "A"
             }
