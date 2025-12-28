@@ -1,17 +1,17 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: grafana-dashboard-grafana-dashboard-sentinel-sre-slo
+  name: grafana-dashboard-grafana-dashboard-sentinel-sre-slo-v3
   namespace: monitoring
   labels:
     grafana_dashboard: "1"
 data:
-  grafana-dashboard-sentinel-sre-slo.json: |
+  grafana-dashboard-sentinel-sre-slo-v3.json: |
     {
       "uid": "sentinel-sre-slo",
       "title": "Sentinel-SRE Loadgen ↔ Demo API (SLO)",
       "schemaVersion": 38,
-      "version": 2,
+      "version": 3,
       "refresh": "10s",
       "time": {
         "from": "now-30m",
