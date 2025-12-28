@@ -1,9 +1,9 @@
 {
-  "uid": "loadgen-demoapi",
-  "title": "Load Generator ↔ Demo API",
+  "uid": "sentinel-sre-slo",
+  "title": "Sentinel-SRE — Loadgen ↔ Demo API (SLO)",
   "schemaVersion": 38,
-  "version": 2,
-  "refresh": "5s",
+  "version": 1,
+  "refresh": "10s",
   "time": {
     "from": "now-30m",
     "to": "now"
@@ -11,54 +11,27 @@
   "panels": [
     {
       "type": "timeseries",
-      "title": "Loadgen RPS",
+      "title": "Load Generator RPS",
       "gridPos": { "x": 0, "y": 0, "w": 12, "h": 7 },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "reqps",
-          "decimals": 1
-        }
-      },
       "targets": [
         {
-          "expr": "sum(rate(loadgen_requests_total[1m]))",
-          "legendFormat": "RPS"
+          "expr": "sum(rate(loadgen_requests_total[2m]))",
+          "legendFormat": "rps"
         }
       ]
     },
     {
       "type": "timeseries",
-      "title": "Loadgen p95 Latency",
+      "title": "Demo API p95 Latency (SLO)",
       "gridPos": { "x": 12, "y": 0, "w": 12, "h": 7 },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s",
-          "decimals": 3,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 0.3 },
-              { "color": "red", "value": 0.6 }
-            ]
-          }
-        }
-      },
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum(rate(loadgen_request_duration_seconds_bucket[5m])) by (le))",
-          "legendFormat": "p95"
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(demoapi_http_request_duration_seconds_bucket[5m])))",
+          "legendFormat": "p95 latency"
         }
-      ]
-    },
-    {
-      "type": "timeseries",
-      "title": "Demo API p95 Latency",
-      "gridPos": { "x": 0, "y": 7, "w": 12, "h": 7 },
+      ],
       "fieldConfig": {
         "defaults": {
-          "unit": "s",
-          "decimals": 3,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -66,87 +39,116 @@
               { "color": "yellow", "value": 0.5 },
               { "color": "red", "value": 1 }
             ]
-          }
+          },
+          "unit": "s"
         }
-      },
-      "targets": [
-        {
-          "expr": "histogram_quantile(0.95, sum(rate(realapp_http_request_duration_seconds_bucket[5m])) by (le))",
-          "legendFormat": "p95"
-        }
-      ]
+      }
     },
     {
       "type": "timeseries",
       "title": "5xx Error Rate",
-      "gridPos": { "x": 12, "y": 7, "w": 12, "h": 7 },
+      "gridPos": { "x": 0, "y": 7, "w": 12, "h": 7 },
+      "targets": [
+        {
+          "expr": "sum(rate(demoapi_http_requests_total{status_class=\"5xx\"}[5m])) / sum(rate(demoapi_http_requests_total[5m]))",
+          "legendFormat": "error ratio"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
-          "unit": "reqps",
-          "decimals": 3,
+          "unit": "percentunit",
           "thresholds": {
             "mode": "absolute",
             "steps": [
               { "color": "green", "value": null },
-              { "color": "red", "value": 0.01 }
+              { "color": "yellow", "value": 0.001 },
+              { "color": "red", "value": 0.005 }
             ]
           }
         }
-      },
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Error Budget Burn Rate (5m)",
+      "gridPos": { "x": 12, "y": 7, "w": 12, "h": 7 },
       "targets": [
         {
-          "expr": "sum(rate(demoapp_http_requests_total{status_class=\"5xx\"}[1m]))",
-          "legendFormat": "5xx"
+          "expr": "(sum(rate(demoapi_http_requests_total{status_class=\"5xx\"}[5m])) / sum(rate(demoapi_http_requests_total[5m]))) / 0.001",
+          "legendFormat": "burn rate (5m)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 6 },
+              { "color": "red", "value": 14 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Error Budget Burn Rate (1h)",
+      "gridPos": { "x": 0, "y": 14, "w": 12, "h": 7 },
+      "targets": [
+        {
+          "expr": "(sum(rate(demoapi_http_requests_total{status_class=\"5xx\"}[1h])) / sum(rate(demoapi_http_requests_total[1h]))) / 0.001",
+          "legendFormat": "burn rate (1h)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 3 },
+              { "color": "red", "value": 6 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Server Inflight Requests",
+      "gridPos": { "x": 12, "y": 14, "w": 12, "h": 7 },
+      "targets": [
+        {
+          "expr": "demoapi_http_inflight_requests",
+          "legendFormat": "inflight"
         }
       ]
     },
     {
       "type": "stat",
       "title": "Target Reachable",
-      "gridPos": { "x": 0, "y": 14, "w": 6, "h": 6 },
+      "gridPos": { "x": 0, "y": 21, "w": 24, "h": 6 },
+      "targets": [
+        {
+          "expr": "loadgen_target_up",
+          "legendFormat": "up"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "0": { "text": "DOWN", "color": "red" },
-                "1": { "text": "UP", "color": "green" }
-              }
-            }
+            { "type": "value", "options": { "0": { "text": "DOWN" }, "1": { "text": "UP" } } }
           ],
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "red", "value": null },
+              { "color": "red", "value": 0 },
               { "color": "green", "value": 1 }
             ]
           }
         }
-      },
-      "targets": [
-        {
-          "expr": "max(loadgen_target_up)",
-          "legendFormat": "reachable"
-        }
-      ]
-    },
-    {
-      "type": "timeseries",
-      "title": "Inflight Requests",
-      "gridPos": { "x": 6, "y": 14, "w": 18, "h": 6 },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "decimals": 0
-        }
-      },
-      "targets": [
-        {
-          "expr": "sum(realapp_http_inflight_requests)",
-          "legendFormat": "inflight"
-        }
-      ]
+      }
     }
   ]
 }
