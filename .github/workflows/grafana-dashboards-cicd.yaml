@@ -19,14 +19,14 @@ jobs:
 
       - name: Validate JSON syntax
         run: |
-          set -e
+          set -euo pipefail
           for f in grafana/dashboard/*.json; do
             jq empty "$f"
           done
 
       - name: Validate Grafana dashboard structure
         run: |
-          set -e
+          set -euo pipefail
           for f in grafana/dashboard/*.json; do
             jq -e '
               .uid and
@@ -47,26 +47,20 @@ jobs:
 
           mkdir -p "$OUT_DIR"
 
-          declare -A ACTIVE_CONFIGMAPS=()
-
           for file in "$SRC_DIR"/*.json; do
             uid="$(jq -r '.uid' "$file")"
             version="$(jq -r '.version' "$file")"
 
             if [ -z "$uid" ] || [ "$uid" = "null" ]; then
-              echo "Missing uid in $file"
               exit 1
             fi
 
             if [ -z "$version" ] || [ "$version" = "null" ]; then
-              echo "Missing version in $file"
               exit 1
             fi
 
             name="grafana-dashboard-${uid}-v${version}"
             out="$OUT_DIR/${name}.yaml"
-
-            ACTIVE_CONFIGMAPS["$name"]=1
 
             cp "$TEMPLATE" "$out"
             sed -i "s/__NAME__/${name}/g" "$out"
@@ -74,8 +68,6 @@ jobs:
             sed 's/^/    /' "$file" > "/tmp/${uid}.json.indented"
             sed -i "/__JSON__/r /tmp/${uid}.json.indented" "$out"
             sed -i "/__JSON__/d" "$out"
-
-            echo "Generated $name"
           done
 
       - name: Remove stale dashboard ConfigMaps
@@ -93,16 +85,11 @@ jobs:
             VALID["grafana-dashboard-${uid}-v${version}"]=1
           done
 
-          for cm in "$OUT_DIR"/*.yaml; do
+          for cm in "$OUT_DIR"/grafana-dashboard-*.yaml; do
             fname="$(basename "$cm")"
             name="${fname%.yaml}"
 
-            if [ "$fname" = "kustomization.yaml" ]; then
-              continue
-            fi
-
             if [ -z "${VALID[$name]+x}" ]; then
-              echo "Removing stale ConfigMap $fname"
               rm -f "$cm"
             fi
           done
@@ -115,21 +102,27 @@ jobs:
           KUSTOMIZATION_FILE="$DASHBOARD_DIR/kustomization.yaml"
 
           if [ ! -f "$KUSTOMIZATION_FILE" ]; then
-            echo "kustomization.yaml missing"
             exit 1
           fi
 
-          # Remove all existing dashboard refs
-          sed -i '/^- grafana-dashboard-/d' "$KUSTOMIZATION_FILE"
+          awk '
+            BEGIN { in_resources = 0 }
+            /^resources:/ { print; in_resources = 1; next }
+            in_resources && /^[^[:space:]]/ { in_resources = 0 }
+            !in_resources { print }
+          ' "$KUSTOMIZATION_FILE" > /tmp/kustomization.base.yaml
 
-          # Add only current dashboards
-          for f in "$DASHBOARD_DIR"/*.yaml; do
-            fname="$(basename "$f")"
-            if [ "$fname" = "kustomization.yaml" ]; then
-              continue
-            fi
-            echo "  - $fname" >> "$KUSTOMIZATION_FILE"
-          done
+          {
+            cat /tmp/kustomization.base.yaml
+            echo "resources:"
+            for f in $(ls "$DASHBOARD_DIR"/grafana-dashboard-*.yaml 2>/dev/null | sort); do
+              echo "  - $(basename "$f")"
+            done
+          } > "$KUSTOMIZATION_FILE"
+
+          if ! grep -q grafana-dashboard- "$KUSTOMIZATION_FILE"; then
+            exit 1
+          fi
 
       - name: Commit & push dashboards
         run: |
@@ -138,7 +131,6 @@ jobs:
           git add argocd/apps/observability/dashboards
 
           if git diff --cached --quiet; then
-            echo "No dashboard changes"
             exit 0
           fi
 
