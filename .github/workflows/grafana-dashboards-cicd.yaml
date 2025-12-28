@@ -24,11 +24,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-            fetch-depth: 0
-            token: ${{ secrets.GITOPS_TOKEN }}
+          fetch-depth: 0
+          token: ${{ secrets.GITOPS_TOKEN }}
 
       - name: Validate JSON syntax
         run: |
+          set -e
           for f in grafana/dashboard/*.json; do
             echo "Validating JSON syntax: $f"
             jq empty "$f"
@@ -36,63 +37,117 @@ jobs:
 
       - name: Validate Grafana dashboard structure
         run: |
+          set -e
           for f in grafana/dashboard/*.json; do
             echo "Validating Grafana structure: $f"
-
             jq -e '
+              .uid and
               .title and
               .panels and
               (.schemaVersion | numbers)
             ' "$f" > /dev/null
           done
 
-      - name: Generate dashboard ConfigMaps
-        run: |
-            OUT_DIR="argocd/apps/observability/dashboards"
-            SRC_DIR="grafana/dashboard"
-            TEMPLATE="grafana/configMap/dashboard-configmap.tpl.yaml"
-            mkdir -p "$OUT_DIR"
-            for file in "$SRC_DIR"/*.json; do
-            name="$(basename "$file" .json)"
-            out="$OUT_DIR/${name}.yaml"
-            cp "$TEMPLATE" "$out"
-            sed -i "s/__NAME__/${name}/g" "$out"
-            sed 's/^/    /' "$file" > /tmp/${name}.json.indented
-            sed -i "/__JSON__/r /tmp/${name}.json.indented" "$out"
-            sed -i "/__JSON__/d" "$out"
-            echo "Generated grafana-dashboard-${name}"
-            done
-
-      - name: Commit & push dashboards
+      - name: Generate dashboard ConfigMaps (uid-based)
         run: |
           set -euo pipefail
-          DASHBOARD_DIR="argocd/apps/observability/dashboards"
-          KUSTOMIZATION_FILE="$DASHBOARD_DIR/kustomization.yaml"
-          if [ ! -d "$DASHBOARD_DIR" ]; then
-            echo "Dashboard directory does not exist, skipping"
+
+          SRC_DIR="grafana/dashboard"
+          OUT_DIR="argocd/apps/observability/dashboards"
+          TEMPLATE="grafana/configMap/dashboard-configmap.tpl.yaml"
+
+          mkdir -p "$OUT_DIR"
+
+          declare -A VALID_CONFIGMAPS=()
+
+          for file in "$SRC_DIR"/*.json; do
+            uid="$(jq -r '.uid' "$file")"
+
+            if [ -z "$uid" ] || [ "$uid" = "null" ]; then
+              echo "Dashboard $file is missing uid"
+              exit 1
+            fi
+
+            name="grafana-dashboard-${uid}"
+            out="$OUT_DIR/${name}.yaml"
+
+            VALID_CONFIGMAPS["$name"]=1
+
+            cp "$TEMPLATE" "$out"
+            sed -i "s/__NAME__/${name}/g" "$out"
+
+            sed 's/^/    /' "$file" > "/tmp/${uid}.json.indented"
+            sed -i "/__JSON__/r /tmp/${uid}.json.indented" "$out"
+            sed -i "/__JSON__/d" "$out"
+
+            echo "Generated ${name}"
+          done
+
+          echo "Dashboard generation complete"
+
+      - name: Remove stale dashboard ConfigMaps
+        run: |
+          set -euo pipefail
+
+          SRC_DIR="grafana/dashboard"
+          OUT_DIR="argocd/apps/observability/dashboards"
+
+          if [ ! -d "$OUT_DIR" ]; then
             exit 0
           fi
+
+          valid_names="$(jq -r '.uid' $SRC_DIR/*.json | sed 's/^/grafana-dashboard-/')"
+
+          for f in "$OUT_DIR"/*.yaml; do
+            fname="$(basename "$f")"
+            name="${fname%.yaml}"
+
+            if [ "$fname" = "kustomization.yaml" ]; then
+              continue
+            fi
+
+            if ! echo "$valid_names" | grep -qx "$name"; then
+              echo "Removing stale ConfigMap: $fname"
+              rm -f "$f"
+            fi
+          done
+
+      - name: Update kustomization.yaml
+        run: |
+          set -euo pipefail
+
+          DASHBOARD_DIR="argocd/apps/observability/dashboards"
+          KUSTOMIZATION_FILE="$DASHBOARD_DIR/kustomization.yaml"
+
           if [ ! -f "$KUSTOMIZATION_FILE" ]; then
-            echo "kustomization.yaml missing — this should not happen"
+            echo "kustomization.yaml missing"
             exit 1
           fi
+
+          sed -i '/^- grafana-dashboard-/d' "$KUSTOMIZATION_FILE"
+
           for f in "$DASHBOARD_DIR"/*.yaml; do
             fname="$(basename "$f")"
             if [ "$fname" = "kustomization.yaml" ]; then
               continue
             fi
-            if ! grep -qE "^[[:space:]]*-[[:space:]]*$fname\$" "$KUSTOMIZATION_FILE"; then
-              echo "  - $fname" >> "$KUSTOMIZATION_FILE"
-              echo "Added $fname to kustomization.yaml"
-            fi
+            echo "  - $fname" >> "$KUSTOMIZATION_FILE"
           done
+
+      - name: Commit & push dashboards
+        run: |
+          set -euo pipefail
+
+          DASHBOARD_DIR="argocd/apps/observability/dashboards"
+
           git add "$DASHBOARD_DIR"
+
           if git diff --cached --quiet; then
             echo "No dashboard changes"
             exit 0
           fi
+
           git config user.name "sentinel-ci"
           git config user.email "sentinel-ci@users.noreply.github.com"
-          git commit -m "grafana: provision dashboards [skip ci]"
+          git commit -m "grafana: reconcile dashboards via uid [skip ci]"
           git push
-
