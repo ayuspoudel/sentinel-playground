@@ -3,5 +3,3 @@ kind: Kustomization
 
 resources:
   - grafana-dashboard-sentinel-sre-slo.yaml
-  - grafana-dashboard-sentinel-sre-slo.yaml
-  - grafana-dashboard-sentinel-sre-slo-v3.yaml
