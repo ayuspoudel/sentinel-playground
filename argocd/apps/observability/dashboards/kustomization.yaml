@@ -3,3 +3,4 @@ kind: Kustomization
 
 resources:
   - loadgen-demoapi.yaml
+  - grafana-dashboard-sentinel-sre-slo.yaml
