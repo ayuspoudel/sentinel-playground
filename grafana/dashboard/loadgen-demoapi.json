@@ -673,7 +673,7 @@
   "timepicker": {},
   "timezone": "",
   "title": "Sentinel-SRE Loadgen ↔ Demo API (SLO)",
-  "uid": "sentinel-sre-slo",
+  "uid": "sentinel-playground-slo",
   "version": 1,
   "weekStart": ""
 }
