@@ -1,12 +1,12 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: grafana-dashboard-grafana-dashboard-sentinel-sre-slo-v5
+  name: grafana-dashboard-grafana-dashboard-sentinel-sre-slo-v6
   namespace: monitoring
   labels:
     grafana_dashboard: "1"
 data:
-  grafana-dashboard-sentinel-sre-slo-v5.json: |
+  grafana-dashboard-sentinel-sre-slo-v6.json: |
     {
       "annotations": {
         "list": [
@@ -653,6 +653,6 @@ data:
       "timezone": "",
       "title": "Sentinel-SRE Loadgen ↔ Demo API (SLO)",
       "uid": "sentinel-sre-slo",
-      "version": 5,
+      "version": 6,
       "weekStart": ""
     }
