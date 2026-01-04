@@ -24,7 +24,7 @@ spec:
 
         sidecar:
           dashboards:
-            enabled: true
+            enabled: false
             label: grafana_dashboard
             labelValue: "1"
             searchNamespace: monitoring
