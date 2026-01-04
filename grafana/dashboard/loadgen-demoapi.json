@@ -21,13 +21,13 @@
   "panels": [
     {
       "type": "row",
-      "title": "Traffic & Availability",
+      "title": "Traffic & Availability for Demo API",
       "gridPos": { "x": 0, "y": 0, "w": 24, "h": 1 }
     },
     {
       "id": 1,
       "type": "timeseries",
-      "title": "Incoming Traffic (RPS)",
+      "title": "Incoming Traffic (RPS) for Demo API",
       "gridPos": { "x": 0, "y": 1, "w": 9, "h": 7 },
       "targets": [
         {
@@ -46,7 +46,7 @@
     {
       "id": 7,
       "type": "stat",
-      "title": "Target Availability",
+      "title": "Target Availability for Demo API",
       "gridPos": { "x": 9, "y": 1, "w": 5, "h": 7 },
       "targets": [
         {
@@ -207,7 +207,7 @@
   "refresh": "10s",
   "schemaVersion": 39,
   "time": { "from": "now-30m", "to": "now" },
-  "title": "Sentinel-SRE Loadgen ↔ Demo API (SLO)",
+  "title": "Loadgen ↔ Demo API (SLO)",
   "uid": "sentinel-playground-slo",
-  "version": 3
+  "version": 4
 }
