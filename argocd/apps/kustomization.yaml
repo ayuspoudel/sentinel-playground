@@ -1,13 +1,4 @@
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
 
-resources:
-  - ./applications/sentinel-demo-api.yaml
-  - ./applications/sentinel-load-generator.yaml
-  - ./observability/prometheus-app.yaml
-  - ./observability/grafana.yaml
-  - ./observability/dashboards/
-  - ./observability/dashboards.yaml
 
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization

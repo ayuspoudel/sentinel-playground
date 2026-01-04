@@ -22,21 +22,6 @@ spec:
         persistence:
           enabled: false
 
-        sidecar:
-          dashboards:
-            enabled: true
-            label: grafana_dashboard
-            labelValue: "1"
-            searchNamespace: monitoring
-            folder: /var/lib/grafana/dashboards
-            provider:
-              name: default
-              orgId: 1
-              folder: ""
-              type: file
-              disableDeletion: false
-              editable: true
-
         datasources:
           datasources.yaml:
             apiVersion: 1
