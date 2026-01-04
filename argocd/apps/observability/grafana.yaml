@@ -15,6 +15,13 @@ spec:
         adminUser: admin
         adminPassword: admin
 
+        service:
+          type: NodePort
+          nodePort: 30030
+
+        persistence:
+          enabled: false
+
         sidecar:
           dashboards:
             enabled: false
@@ -29,13 +36,6 @@ spec:
               type: file
               disableDeletion: false
               editable: true
-              
-        service:
-          type: NodePort
-          nodePort: 30030
-
-        persistence:
-          enabled: false
 
         datasources:
           datasources.yaml:
