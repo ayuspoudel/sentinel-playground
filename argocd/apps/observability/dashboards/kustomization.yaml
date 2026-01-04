@@ -3,4 +3,4 @@ kind: Kustomization
 
 
 resources:
-  - grafana-dashboard-sentinel-playground-slo-v3.yaml
+  - grafana-dashboard-sentinel-playground-slo-v4.yaml
