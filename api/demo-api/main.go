@@ -57,7 +57,7 @@ func main() {
 		time.Sleep(delay)
 
 		statusCode := http.StatusOK
-		if rand.Intn(1001) == 0 {
+		if rand.Intn(999) == 0 {
 			statusCode = http.StatusInternalServerError
 		}
 
