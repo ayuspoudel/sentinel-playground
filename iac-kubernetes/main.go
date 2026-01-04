@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"log"
+	"net"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -136,26 +137,6 @@ func installPrometheusCRDs(ctx context.Context, kubeCtx string) error {
 	return kubectl(ctx, kubeCtx, "apply", "-f", crdURL)
 }
 
-func portForwardPrometheus(ctx context.Context, kubeCtx string, localPort string) {
-	for {
-		if ctx.Err() != nil {
-			return
-		}
-		cmd := exec.CommandContext(
-			ctx,
-			"kubectl", "--context", kubeCtx,
-			"-n", "monitoring",
-			"port-forward",
-			"svc/prometheus-k8s",
-			localPort+":9090",
-		)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		_ = cmd.Run()
-		time.Sleep(2 * time.Second)
-	}
-}
-
 func argocdHasInsecure(ctx context.Context, kubeCtx string) bool {
 	out := kubectlOut(ctx, kubeCtx,
 		"-n", "argocd",
@@ -204,36 +185,46 @@ func applyRootApp(ctx context.Context, kubeCtx string) {
 	}
 }
 
-func portForwardArgoCD(ctx context.Context, kubeCtx string) {
-	for {
-		if ctx.Err() != nil {
-			return
-		}
-		cmd := exec.CommandContext(
-			ctx,
-			"kubectl", "--context", kubeCtx,
+func waitForArgoCDServerReady(ctx context.Context, kubeCtx string) error {
+	ok := waitFor(ctx, 2*time.Second, 5*time.Minute, func() bool {
+		out := kubectlOut(ctx, kubeCtx,
 			"-n", "argocd",
-			"port-forward",
-			"svc/argocd-server",
-			"8088:80",
+			"get", "pod",
+			"-l", "app.kubernetes.io/name=argocd-server",
+			"-o", "jsonpath={.items[0].status.containerStatuses[0].ready}",
 		)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		_ = cmd.Run()
-		time.Sleep(2 * time.Second)
+		return out == "true"
+	})
+	if !ok {
+		return context.DeadlineExceeded
 	}
+	return nil
 }
 
-func startNgrok(ctx context.Context, port string, name string) {
-	token := os.Getenv("NGROK_AUTHTOKEN")
-	if token == "" {
-		log.Fatal("NGROK_AUTHTOKEN not set")
-	}
-	run(ctx, "ngrok", "config", "add-authtoken", token)
-	cmd := exec.CommandContext(ctx, "ngrok", "http", port)
+func portForwardArgoCD(ctx context.Context, kubeCtx string, localPort string) error {
+	cmd := exec.CommandContext(
+		ctx,
+		"kubectl", "--context", kubeCtx,
+		"-n", "argocd",
+		"port-forward",
+		"svc/argocd-server",
+		localPort+":443",
+	)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	_ = cmd.Run()
+	return cmd.Run()
+}
+
+func startNgrok(ctx context.Context, port string) error {
+	token := os.Getenv("NGROK_AUTHTOKEN")
+	if token == "" {
+		return nil
+	}
+	_ = exec.Command("ngrok", "config", "add-authtoken", token).Run()
+	cmd := exec.CommandContext(ctx, "ngrok", "tcp", port)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
 }
 
 func waitForArgoCDApps(ctx context.Context, kubeCtx string) {
@@ -258,41 +249,84 @@ func waitForArgoCDApps(ctx context.Context, kubeCtx string) {
 	}
 }
 
+func waitForLocalPort(ctx context.Context, addr string, timeout time.Duration) error {
+	deadline := time.Now().Add(timeout)
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+			if time.Now().After(deadline) {
+				return context.DeadlineExceeded
+			}
+			conn, err := net.DialTimeout("tcp", addr, 500*time.Millisecond)
+			if err == nil {
+				conn.Close()
+				return nil
+			}
+			time.Sleep(500 * time.Millisecond)
+		}
+	}
+}
+
 func main() {
 	log.SetFlags(0)
+
 	checkBinary("minikube")
 	checkBinary("kubectl")
 	checkBinary("ngrok")
+
 	loadEnv()
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
 		<-sig
 		cancel()
 	}()
+
 	activeClusters := allClusters
 	if len(os.Args) > 1 && os.Args[1] == "--single" {
 		activeClusters = singleCluster
 	}
+
 	if err := startClustersSequential(ctx, activeClusters); err != nil {
 		log.Fatal(err)
 	}
+
 	for _, c := range activeClusters {
 		if err := installPrometheusCRDs(ctx, c); err != nil {
 			log.Fatal(err)
 		}
 	}
+
 	installArgoCD(ctx, "sreCluster")
 	applyRootApp(ctx, "sreCluster")
-	go portForwardArgoCD(ctx, "sreCluster")
-	go startNgrok(ctx, "8088", "argocd")
+
+	if err := waitForArgoCDServerReady(ctx, "sreCluster"); err != nil {
+		log.Fatal("argocd-server never became ready")
+	}
+
+	go func() {
+		if err := portForwardArgoCD(ctx, "sreCluster", "8088"); err != nil {
+			log.Println("argocd port-forward exited:", err)
+		}
+	}()
+
+	if err := waitForLocalPort(ctx, "127.0.0.1:8088", 30*time.Second); err != nil {
+		log.Fatal("argocd port-forward never became ready")
+	}
+
+	// go func() {
+	// 	if err := startNgrok(ctx, "8088"); err != nil {
+	// 		log.Println("ngrok exited:", err)
+	// 	}
+	// }()
+
 	waitForArgoCDApps(ctx, "sreCluster")
-	// port := 9091
-	// for _, c := range activeClusters {
-	// 	go portForwardPrometheus(ctx, c, strconv.Itoa(port))
-	// 	port++
-	// }
+
 	<-ctx.Done()
 }
