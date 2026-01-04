@@ -188,7 +188,7 @@
     {
       "id": 5,
       "type": "timeseries",
-      "title": "Sustained Burn Rate (1h)",
+      "title": "Sustained Burn Rate For Demo API (1h)",
       "gridPos": { "x": 12, "y": 24, "w": 12, "h": 7 },
       "targets": [
         {
@@ -209,5 +209,5 @@
   "time": { "from": "now-30m", "to": "now" },
   "title": "Sentinel-SRE Loadgen ↔ Demo API (SLO)",
   "uid": "sentinel-playground-slo",
-  "version": 2
+  "version": 3
 }
