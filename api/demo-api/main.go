@@ -62,7 +62,7 @@ func main() {
 		}
 
 		w.WriteHeader(statusCode)
-		w.Write([]byte("hello from demoapi  \n"))
+		w.Write([]byte("hello from demoapi\n"))
 
 		statusClass := strconv.Itoa(statusCode/100) + "xx"
 
