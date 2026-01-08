@@ -13,6 +13,7 @@ spec:
     metadata:
       labels:
         app: {{ .Release.Name }}
+        sentinel.guard/name: demo-api
     spec:
       containers:
         - name: demoapp
