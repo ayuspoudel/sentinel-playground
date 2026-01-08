@@ -9,7 +9,7 @@ spec:
   source:
     repoURL: https://github.com/ayuspoudel/k8s-admission-webhook.git
     targetRevision: develop
-    path: charts/webhook-server
+    path: charts/
 
     helm:
       valueFiles:
