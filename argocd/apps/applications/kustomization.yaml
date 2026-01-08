@@ -4,3 +4,4 @@ kind: Kustomization
 resources:
   - ./sentinel-demo-api.yaml
   - ./sentinel-load-generator.yaml
+  - ./test-webhook.yaml
