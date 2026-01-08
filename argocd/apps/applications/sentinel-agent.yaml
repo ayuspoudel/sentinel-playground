@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: sentinel-agent
+  namespace: argocd
+spec:
+  project: default
+
+  sources:
+    - repoURL: https://ayuspoudel.github.io/sentinel-sre
+      chart: sentinel-agent
+      targetRevision: "*"
+      helm:
+        valueFiles:
+          - $values/charts/agent/values.yaml
+
+    - repoURL: https://github.com/ayuspoudel/sentinel-sre
+      targetRevision: develop
+      ref: values
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: sentinel
+
+  syncPolicy: {}
