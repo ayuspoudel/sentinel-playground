@@ -12,7 +12,7 @@ spec:
       targetRevision: "*"
       helm:
         valueFiles:
-          - $values/charts/agent/values.yaml
+          - $values/deploy/values-agent/values.yaml
 
     - repoURL: https://github.com/ayuspoudel/sentinel-sre
       targetRevision: develop
